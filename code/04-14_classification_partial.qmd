@@ -541,22 +541,28 @@ final_fit %>%
 ### Test set  
 Confusion matrix on **test set**:  
 ```{r}
-
+final_fit %>%
+  collect_predictions() %>%
+  conf_mat(truth = strength_gtex_class,
+           estimate = .pred_class) %>%
+  autoplot(type = "heatmap")
   
 ```
 
 Metrics on the **test set**:
 ```{r}
-
+final_fit %>%
+  collect_metrics()
 ```
 Let's hand-calculate accuracy:  
 ```{r}
 #  Numerator: number of correctly classified (the diagonal)
-numerator 
+numerator <- 45 + 32 + 30
 
 # Denominator: number of all observations  
-denominator 
+denominator <- 45 + 20 + 14 + 20 + 32 + 26 + 6 + 18 + 30
 
+numerator / denominator
 ```
 
 Let's plot ROC on **test set**:  
@@ -567,9 +573,9 @@ final_fit %>%
             .pred_Low,
             .pred_Medium,
             .pred_High) %>%
-ggplot(aes(x = ..., 
-           y = ..., 
-           color = ...)) +
+ggplot(aes(x = 1 - specificity, 
+           y = sensitivity, 
+           color = .level)) +
   geom_line(size = 1.2) +
   geom_abline(linetype = "dashed") +
   coord_equal() +
@@ -596,7 +602,8 @@ final_spec %>%
                           weather_train)) %>%
   conf_mat(truth = strength_gtex_class,
            estimate = .pred_class
-          )
+          ) %>%
+  autoplot(type = "heatmap")
   
 ```
 
@@ -608,7 +615,9 @@ final_spec %>%
       data = bake(weather_prep, 
                   weather_train)) %>%
   augment(new_data = bake(weather_prep, 
-                          weather_train)) 
+                          weather_train)) %>%
+  accuracy(truth = strength_gtex_class,
+           estimate = .pred_class)
 
 ```
 How does metrics on test compare to metrics on train?  
@@ -654,7 +663,7 @@ The variables with the **largest average decrease in accuracy** are considered *
 
 ```{r}
 final_spec %>%
-  fit(... ~ .,
+  fit(strength_gtex_class ~ .,
          data = bake(weather_prep, 
                      weather_train)) %>%
     vi() %>%
